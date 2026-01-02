@@ -1,18 +1,33 @@
+#include "server.h"
+#include "parser.h"
+#include "executor.h"
+#include "storage.h"
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iostream>
 #include <thread>
 
-#pragma comment(lib, "ws2_32.lib") 
+#pragma comment(lib, "ws2_32.lib")
 
-void handleClient(SOCKET client_socket) {
+void handleClient(SOCKET client_socket, Storage& storage) {
     std::cout << "Client connected\n";
+
     char buffer[512];
     int bytesReceived;
-
+    std::string clientBuffer;
+    Executor executor(storage);
 
     while ((bytesReceived = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
-        send(client_socket, buffer, bytesReceived, 0); 
+        clientBuffer.append(buffer, bytesReceived);
+
+        auto commands = Parser::parseCommands(clientBuffer);
+        for (auto &cmd : commands) {
+            std::string reply = executor.execute(cmd);
+            if (!reply.empty()) {
+                send(client_socket, reply.c_str(), reply.size(), 0);
+            }
+        }
     }
 
     closesocket(client_socket);
@@ -54,21 +69,17 @@ void startServer(int portnum) {
 
     std::cout << "Server listening on port " << portnum << "...\n";
 
+    Storage storage;
+
     while (true) {
         SOCKET client_socket = accept(server_socket, nullptr, nullptr);
         if (client_socket == INVALID_SOCKET) {
             std::cerr << "Accept failed\n";
-            continue; 
+            continue;
         }
-
-        std::thread(handleClient, client_socket).detach();
+        std::thread(handleClient, client_socket, std::ref(storage)).detach();
     }
 
     closesocket(server_socket);
     WSACleanup();
-}
-
-int main() {
-    startServer(6379);
-    return 0;
 }
