@@ -38,6 +38,10 @@ std::string Executor::execute(const std::string& cmdLine) {
         storage_.show();
         return "Done\r\n";
     }
+    else if (cmd=="SAVE"){
+        storage_.save();
+        return "Done\r\n";
+    }
     else {
         return "-ERROR unknown command\r\n";
     }

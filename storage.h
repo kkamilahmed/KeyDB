@@ -8,6 +8,8 @@ public:
     void set(const std::string &key, const std::string &value);
     bool get(const std::string &key, std::string&value);
     void show();
+    void save();
+    void load();
 };
 
 #endif // STORAGE_H

@@ -2,9 +2,26 @@
 #include <unordered_map>
 #include <mutex>
 #include <iostream>
+#include "utils.h"
 
 static std::unordered_map<std::string, std::string> store;
 static std::mutex store_mutex;
+
+void Storage::load() {
+    std::lock_guard<std::mutex> lock(store_mutex);
+    
+    std::ifstream file("dump.txt");
+    if (file.is_open()) {
+        file.close();  
+        importMap(store, "dump.txt");
+        std::cout << "Loaded store from dump.txt\n";
+    } else {
+        std::cout << "No dump.txt found, starting with empty store\n";
+    }
+}
+
+
+
 
 void Storage::set(const std::string& key, const std::string& value) {
     std::lock_guard<std::mutex> lock(store_mutex);
@@ -22,8 +39,14 @@ bool Storage::get(const std::string& key, std::string& value) {
 }
 
 void Storage::show(){
+    std::lock_guard<std::mutex> lock(store_mutex);
     for (const auto& pair : store) {
     std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
     }
+}
 
+
+void Storage::save(){
+    std::lock_guard<std::mutex> lock(store_mutex);
+    exportMap(store, "dump.txt");
 }

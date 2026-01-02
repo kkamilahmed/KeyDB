@@ -70,6 +70,7 @@ void startServer(int portnum) {
     std::cout << "Server listening on port " << portnum << "...\n";
 
     Storage storage;
+    storage.load();
 
     while (true) {
         SOCKET client_socket = accept(server_socket, nullptr, nullptr);
